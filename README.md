@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Task A](#task-a)
 - [Task B](#task-b)
+- [Task C](#task-c)
 
 ## Task A
 
@@ -41,3 +42,16 @@ Adjust your `dev` branch to include all commits from the `workshop-branch` and t
 ### Verification
 - Ensure there are no unnecessary commits in the history.
 - Verify that the pipeline succeeds after pushing the updated branch.
+
+## Task C
+
+Rebase your branch on top of the `main` branch (after the most recent push).
+Ensure that everything still works as expected. 
+Resolve any conflicts that arise during the rebase process, and verify that the commit history remains clean and logical.
+
+Apply the changes from the new main to the commits (e.g. outdated titles)
+
+### Verification
+- Check that the branch is successfully rebased on top of `main`.
+- Ensure the pipeline runs successfully after the rebase.
+- Verify that all tasks and functionality remain intact.
