@@ -25,19 +25,21 @@ jobs:
 
           # Define expected structure and outputs (in reverse order as shown by git log)
           EXPECTED_COMMITS=(
-            "{\"title\":\"chore(main): order my pizza\",\"file\":\"src/main.ps1\"}"
-            "{\"title\":\"refact(main): extract Get-Pizza\",\"file\":\"src/main.ps1\"}"
-            "{\"title\":\"chore(main): call Submit-Order with custom pizza\",\"file\":\"src/main.ps1\"}"
-            "{\"title\":\"feat(order): implement Submit-Order\",\"file\":\"src/order.ps1\"}"
+            "{\"title\":\"chore(main): order my pizza\",\"file\":\"src/main.ps1\",\"diff\":\".github/expected-outputs/commit4-diff.txt\"}"
+            "{\"title\":\"refact(main): extract Get-Pizza\",\"file\":\"src/main.ps1\",\"diff\":\".github/expected-outputs/commit3-diff.txt\"}"
+            "{\"title\":\"chore(main): call Submit-Order with custom pizza\",\"file\":\"src/main.ps1\",\"diff\":\".github/expected-outputs/commit2-diff.txt\"}"
+            "{\"title\":\"feat(order): implement Submit-Order\",\"file\":\"src/order.ps1\",\"diff\":\".github/expected-outputs/commit1-diff.txt\"}"
           )
 
           i=0
           for COMMIT in $COMMITS; do
             TITLE=$(git log -1 --pretty=%s $COMMIT)
             FILE=$(git diff-tree --no-commit-id --name-only -r $COMMIT)
+            DIFF_OUTPUT=$(git diff $COMMIT~1 $COMMIT)
 
             EXPECTED_TITLE=$(echo ${EXPECTED_COMMITS[$i]} | jq -r .title)
             EXPECTED_FILE=$(echo ${EXPECTED_COMMITS[$i]} | jq -r .file)
+            EXPECTED_DIFF=$(echo ${EXPECTED_COMMITS[$i]} | jq -r .diff)
 
             if [ "$TITLE" != "$EXPECTED_TITLE" ]; then
               echo "Unexpected commit title: $TITLE"
@@ -48,6 +50,26 @@ jobs:
             if [ "$FILE" != "$EXPECTED_FILE" ]; then
               echo "Unexpected file changed in commit $TITLE: $FILE"
               echo "Expected: $EXPECTED_FILE"
+              exit 1
+            fi
+
+            echo "$DIFF_OUTPUT" > actual-diff.txt
+
+
+            if [ $i -eq 0 ]; then
+              # Special handling for commit 4 to allow any pizza name
+
+              # Remove the dynamically generated index line from both actual and expected diffs
+              sed -i '/^index /d' actual-diff.txt
+              sed -i '/^index /d' $EXPECTED_DIFF
+
+              sed -i '/^+/!b;/Name = \"some\"/!s/Name = \"[^"]*\"/Name = \"<any pizza name>\"/' actual-diff.txt
+            fi
+
+            if ! diff -q actual-diff.txt $EXPECTED_DIFF; then
+              echo "Diff output mismatch for commit $TITLE"
+              echo "Expected diff:" && cat $EXPECTED_DIFF
+              echo "Actual diff:" && cat actual-diff.txt
               exit 1
             fi
 
